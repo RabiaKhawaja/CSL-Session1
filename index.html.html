@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Number Sorting Fun 🎈</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Fredoka', system-ui, sans-serif; }
+
+  @keyframes drift {
+    from { transform: translateX(-30vw); }
+    to   { transform: translateX(130vw); }
+  }
+  .cloud { animation: drift linear infinite; }
+
+  @keyframes pulseSun {
+    0%,100% { box-shadow: 0 0 50px 14px rgba(253,224,71,.75); transform: scale(1); }
+    50%     { box-shadow: 0 0 80px 26px rgba(253,224,71,.55); transform: scale(1.05); }
+  }
+  .sun { animation: pulseSun 4s ease-in-out infinite; }
+
+  @keyframes sway {
+    0%,100% { transform: rotate(-7deg); }
+    50%     { transform: rotate(7deg); }
+  }
+  .flower { display:inline-block; transform-origin: bottom center; animation: sway 3s ease-in-out infinite; }
+
+  @keyframes hop {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50%     { transform: translateY(-14px) rotate(3deg); }
+  }
+  .toon { animation: hop 1.6s ease-in-out infinite; }
+
+  @keyframes floaty {
+    0%,100% { translate: 0 0; }
+    50%     { translate: 0 -10px; }
+  }
+  .bubble {
+    width: 86px; height: 86px;
+    border-radius: 9999px;
+    display: grid; place-items: center;
+    font-size: 2rem; font-weight: 700; color: #fff;
+    border: 4px solid rgba(255,255,255,.9);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18), inset 0 -7px 0 rgba(0,0,0,.10);
+    text-shadow: 0 2px 5px rgba(0,0,0,.28);
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease;
+    animation: floaty 3s ease-in-out infinite;
+    will-change: translate, transform;
+  }
+  .bubble:hover { transform: scale(1.13) rotate(-5deg); box-shadow: 0 18px 30px rgba(0,0,0,.25); }
+  .bubble:active { transform: scale(.94); }
+  .bubble.sorted { pointer-events: none; }
+
+  .basket-rim {
+    height: 22px; border-radius: 9999px;
+    background: linear-gradient(180deg, #fde68a, #f59e0b);
+    border: 5px solid #b45309;
+    box-shadow: 0 4px 0 rgba(0,0,0,.12);
+  }
+  .basket-body {
+    position: relative;
+    min-height: 168px;
+    border: 6px solid #b45309;
+    border-top: none;
+    border-radius: 0 0 34px 34px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.30) 0 9px, transparent 9px 18px),
+      repeating-linear-gradient(0deg,  rgba(255,255,255,.30) 0 9px, transparent 9px 18px),
+      linear-gradient(180deg, #fbbf24, #f59e0b);
+    box-shadow: inset 0 -14px 24px rgba(0,0,0,.14), 0 14px 26px rgba(0,0,0,.16);
+    transition: transform .2s ease, box-shadow .2s ease;
+    overflow: hidden;
+  }
+  .basket-body::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,.18), transparent 40%);
+    pointer-events:none;
+  }
+  .basket-hit { animation: hit .5s ease; }
+  @keyframes hit {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.07) rotate(-2deg); }
+    100% { transform: scale(1); }
+  }
+
+  .chip {
+    display: grid; place-items: center;
+    min-width: 46px; height: 46px; padding: 0 10px;
+    border-radius: 14px;
+    font-weight: 700; font-size: 1.15rem; color: #fff;
+    border: 3px solid rgba(255,255,255,.9);
+    box-shadow: 0 5px 12px rgba(0,0,0,.22);
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+
+  .spark {
+    position: fixed; width: 12px; height: 12px; border-radius: 9999px;
+    pointer-events: none; z-index: 10000;
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(.5) rotate(-8deg); opacity: 0; }
+    70% { transform: scale(1.06) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .pop-in { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+</style>
+</head>
+
+<body class="min-h-screen overflow-x-hidden relative">
+
+  <div class="fixed inset-0 -z-20 bg-gradient-to-b from-sky-300 via-sky-200 to-emerald-100"></div>
+
+  <div class="sun fixed top-6 left-6 w-24 h-24 rounded-full bg-yellow-300 -z-10"></div>
+
+  <div class="cloud fixed top-16 -z-10 opacity-90" style="animation-duration:48s;">
+    <div class="relative w-40 h-12 bg-white rounded-full shadow-lg">
+      <div class="absolute -top-6 left-6 w-20 h-20 bg-white rounded-full"></div>
+      <div class="absolute -top-4 right-6 w-14 h-14 bg-white rounded-full"></div>
+    </div>
+  </div>
+  <div class="cloud fixed top-40 -z-10 opacity-80" style="animation-duration:70s; animation-delay:-20s;">
+    <div class="relative w-28 h-9 bg-white rounded-full shadow-lg">
+      <div class="absolute -top-5 left-4 w-16 h-16 bg-white rounded-full"></div>
+      <div class="absolute -top-3 right-4 w-11 h-11 bg-white rounded-full"></div>
+    </div>
+  </div>
+  <div class="cloud fixed top-72 -z-10 opacity-70" style="animation-duration:90s; animation-delay:-50s;">
+    <div class="relative w-32 h-10 bg-white rounded-full shadow-lg">
+      <div class="absolute -top-5 left-5 w-16 h-16 bg-white rounded-full"></div>
+      <div class="absolute -top-3 right-5 w-12 h-12 bg-white rounded-full"></div>
+    </div>
+  </div>
+
+  <main class="relative z-10 max-w-5xl mx-auto px-4 pt-6 pb-40">
+
+    <header class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <h1 class="text-3xl sm:text-4xl font-bold text-white drop-shadow-[0_3px_0_rgba(0,0,0,.25)]">
+        🎈 Number Sorting Fun!
+      </h1>
+
+      <div class="flex items-center gap-2">
+        <div class="bg-white/85 backdrop-blur rounded-full px-4 py-2 shadow-lg border-2 border-white">
+          <span class="text-slate-700 font-semibold">Sorted:</span>
+          <span id="progressText" class="text-fuchsia-600 font-bold">0 / 8</span>
+        </div>
+        <button id="soundBtn"
+                class="bg-white/85 backdrop-blur rounded-full w-11 h-11 grid place-items-center shadow-lg border-2 border-white text-xl hover:scale-110 transition">
+          🔊
+        </button>
+        <button id="resetBtn"
+                class="bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white font-semibold rounded-full px-5 py-2.5 shadow-lg border-2 border-white hover:scale-105 active:scale-95 transition">
+          ↻ Reset
+        </button>
+      </div>
+    </header>
+
+    <section class="flex items-end gap-3 sm:gap-4 mb-7">
+      <div class="toon text-6xl sm:text-7xl select-none" aria-hidden="true">🐰</div>
+      <div class="relative bg-white/90 backdrop-blur rounded-3xl rounded-bl-none px-5 py-4 shadow-xl border-4 border-white flex-1">
+        <p class="text-slate-800 text-lg sm:text-xl font-semibold leading-snug">
+          Choose a number <b class="text-fuchsia-600">click</b> and see where it lies in the
+          <span class="text-emerald-600">basket</span>! 🪣✨
+        </p>
+        <p class="text-slate-500 text-sm mt-1">Less than 50 ➜ left basket &nbsp;|&nbsp; Greater than 50 ➜ right basket</p>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <div class="bg-white/45 backdrop-blur-sm rounded-[36px] border-4 border-dashed border-white/90 p-5 sm:p-7 shadow-inner">
+        <div id="numbersArea" class="flex flex-wrap justify-center gap-4 sm:gap-6"></div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+
+      <div>
+        <div class="flex items-center justify-center gap-2 mb-2">
+          <span class="text-2xl">🟢</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-emerald-900 bg-emerald-200/80 px-4 py-1 rounded-full border-2 border-white shadow">
+            Less than 50
+          </h2>
+        </div>
+        <div class="basket-rim"></div>
+        <div id="bucketLess" class="basket-body">
+          <div class="relative z-10 p-4 flex flex-wrap gap-2 justify-center items-start">
+            <span class="hint text-amber-900/70 font-semibold text-sm mt-6">⬇ numbers will be here</span>
+            <div id="chipsLess" class="flex flex-wrap gap-2 justify-center w-full"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-center gap-2 mb-2">
+          <span class="text-2xl">🔴</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-rose-900 bg-rose-200/80 px-4 py-1 rounded-full border-2 border-white shadow">
+            Greater than 50
+          </h2>
+        </div>
+        <div class="basket-rim"></div>
+        <div id="bucketMore" class="basket-body">
+          <div class="relative z-10 p-4 flex flex-wrap gap-2 justify-center items-start">
+            <span class="hint text-amber-900/70 font-semibold text-sm mt-6">⬇ numbers will be here</span>
+            <div id="chipsMore" class="flex flex-wrap gap-2 justify-center w-full"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div class="fixed bottom-0 left-0 right-0 -z-10 pointer-events-none">
+    <div class="h-24 bg-gradient-to-t from-emerald-500 via-emerald-400 to-transparent"></div>
+    <div class="flex justify-around items-end pb-2 text-3xl sm:text-4xl select-none">
+      <span class="flower" style="animation-delay:0s">🌸</span>
+      <span class="flower" style="animation-delay:.4s">🌼</span>
+      <span class="flower" style="animation-delay:.8s">🌺</span>
+      <span class="flower" style="animation-delay:.2s">🌷</span>
+      <span class="flower" style="animation-delay:.6s">🌸</span>
+      <span class="flower" style="animation-delay:1s">🌻</span>
+      <span class="flower" style="animation-delay:.3s">🌼</span>
+      <span class="flower" style="animation-delay:.7s">🌺</span>
+    </div>
+  </div>
+
+  <div id="winOverlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 backdrop-blur-sm p-4">
+    <div class="pop-in bg-white rounded-[40px] px-8 py-10 text-center shadow-2xl border-8 border-yellow-300 max-w-sm w-full">
+      <div class="text-7xl mb-3">🎉</div>
+      <h2 class="text-3xl font-bold text-fuchsia-600 mb-2">Excellent!</h2>
+      <p class="text-slate-600 text-lg mb-6">You have sorted the numbers correctly! 🌟</p>
+      <button id="playAgain"
+              class="bg-gradient-to-r from-emerald-400 to-sky-500 text-white text-xl font-bold rounded-full px-10 py-3.5 shadow-lg hover:scale-105 active:scale-95 transition">
+        Play Again 🚀
+      </button>
+    </div>
+  </div>
+
+<script>
+const TOTAL_NUMBERS = 8;
+
+const COLORS = [
+  ['#FF9A9E', '#F6416C'],
+  ['#A18CD1', '#7C4DFF'],
+  ['#43C6AC', '#191654'],
+  ['#F6D365', '#FDA085'],
+  ['#84FAB0', '#08B6A0'],
+  ['#FF9A9E', '#A18CD1'],
+  ['#5EE7DF', '#3B82F6'],
+  ['#FFD26F', '#FF7B54'],
+];
+
+function generateRandomNumbers() {
+  const total = TOTAL_NUMBERS;
+  const half  = total / 2;
+  const pool  = new Set();
+
+  while (pool.size < half) {
+    pool.add(Math.floor(Math.random() * 45) + 5);
+  }
+
+  while (pool.size < total) {
+    pool.add(Math.floor(Math.random() * 45) + 55);
+  }
+
+  return [...pool];
+}
+
+let NUMBERS = generateRandomNumbers();
+
+const numbersArea  = document.getElementById('numbersArea');
+const bucketLess   = document.getElementById('bucketLess');
+const bucketMore   = document.getElementById('bucketMore');
+const chipsLess    = document.getElementById('chipsLess');
+const chipsMore    = document.getElementById('chipsMore');
+const progressText = document.getElementById('progressText');
+const winOverlay   = document.getElementById('winOverlay');
+const soundBtn     = document.getElementById('soundBtn');
+const resetBtn     = document.getElementById('resetBtn');
+const playAgain    = document.getElementById('playAgain');
+
+let sortedCount = 0;
+let busy = false;
+let soundOn = true;
+
+let audioCtx = null;
+function beep(freq = 620, type = 'sine', dur = 0.22, vol = 0.14) {
+  if (!soundOn) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(freq * 1.7, audioCtx.currentTime + dur * 0.8);
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur + 0.02);
+  } catch (e) {}
+}
+
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? '🔊' : '🔇';
+});
+
+function buildBubbles() {
+  numbersArea.innerHTML = '';
+
+  NUMBERS = generateRandomNumbers();
+
+  const list = [...NUMBERS].sort(() => Math.random() - 0.5);
+
+  list.forEach((num, i) => {
+    const [c1, c2] = COLORS[i % COLORS.length];
+
+    const btn = document.createElement('button');
+    btn.className = 'bubble';
+    btn.textContent = num;
+    btn.style.background = `linear-gradient(145deg, ${c1}, ${c2})`;
+    btn.style.animationDelay = (i * 0.18) + 's';
+    btn.setAttribute('aria-label', `Number ${num}`);
+
+    btn.addEventListener('click', () => launchNumber(btn, num));
+    numbersArea.appendChild(btn);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  progressText.textContent = `${sortedCount} / ${NUMBERS.length}`;
+}
+
+function launchNumber(bubbleEl, num) {
+  if (busy || bubbleEl.classList.contains('sorted')) return;
+  busy = true;
+  bubbleEl.classList.add('sorted');
+
+  const isLess = num < 50;
+  const targetBasket = isLess ? bucketLess : bucketMore;
+  const targetChips  = isLess ? chipsLess  : chipsMore;
+
+  const startRect  = bubbleEl.getBoundingClientRect();
+  const targetRect = targetBasket.getBoundingClientRect();
+  const [, c2] = COLORS[num % COLORS.length];
+
+  const ghost = bubbleEl.cloneNode(true);
+  ghost.className = 'bubble';
+  ghost.style.position = 'fixed';
+  ghost.style.left   = startRect.left + 'px';
+  ghost.style.top    = startRect.top + 'px';
+  ghost.style.width  = startRect.width + 'px';
+  ghost.style.height = startRect.height + 'px';
+  ghost.style.margin = '0';
+  ghost.style.zIndex = '9999';
+  ghost.style.pointerEvents = 'none';
+  ghost.style.animation = 'none';
+  ghost.style.transition = 'none';
+  document.body.appendChild(ghost);
+
+  bubbleEl.style.opacity = '0';
+  bubbleEl.style.pointerEvents = 'none';
+
+  const startCX = startRect.left + startRect.width / 2;
+  const startCY = startRect.top + startRect.height / 2;
+  const endCX   = targetRect.left + targetRect.width / 2;
+  const endCY   = targetRect.top + targetRect.height / 2;
+
+  const dx = endCX - startCX;
+  const dy = endCY - startCY;
+
+  beep(isLess ? 520 : 760, 'triangle', 0.18, 0.10);
+
+  const flight = ghost.animate([
+    { transform: 'translate(0px, 0px) scale(1) rotate(0deg)' },
+    { transform: `translate(${dx * 0.45}px, ${dy * 0.45 - 150}px) scale(1.4) rotate(200deg)`, offset: 0.5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(0.45) rotate(420deg)` }
+  ], {
+    duration: 950,
+    easing: 'cubic-bezier(.45,-0.25,.5,1.25)',
+    fill: 'forwards'
+  });
+
+  flight.onfinish = () => {
+    ghost.remove();
+    bubbleEl.remove();
+
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = num;
+    chip.style.background = `linear-gradient(145deg, #ffffff55, ${c2})`;
+    targetChips.appendChild(chip);
+
+    chip.animate([
+      { transform: 'scale(0) rotate(-40deg)', opacity: 0 },
+      { transform: 'scale(1.25) rotate(8deg)', opacity: 1, offset: 0.65 },
+      { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+    ], { duration: 420, easing: 'ease-out' });
+
+    const hint = targetBasket.querySelector('.hint');
+    if (hint) hint.style.display = 'none';
+
+    targetBasket.classList.remove('basket-hit');
+    void targetBasket.offsetWidth;
+    targetBasket.classList.add('basket-hit');
+
+    sparkleBurst(endCX, endCY);
+    beep(880, 'sine', 0.2, 0.12);
+
+    sortedCount++;
+    updateProgress();
+
+    setTimeout(() => {
+      busy = false;
+      if (sortedCount === NUMBERS.length) showWin();
+    }, 250);
+  };
+}
+
+function sparkleBurst(x, y) {
+  const colors = ['#FFD93D', '#FF6B6B', '#4ECDC4', '#A78BFA', '#34D399', '#F472B6'];
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = x + 'px';
+    s.style.top  = y + 'px';
+    s.style.background = colors[i % colors.length];
+    document.body.appendChild(s);
+
+    const angle = (Math.PI * 2 * i) / 12 + Math.random() * 0.5;
+    const dist  = 60 + Math.random() * 80;
+
+    s.animate([
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0)`, opacity: 0 }
+    ], { duration: 650 + Math.random() * 300, easing: 'cubic-bezier(.2,.7,.4,1)' })
+      .onfinish = () => s.remove();
+  }
+}
+
+function showWin() {
+  winOverlay.classList.remove('hidden');
+  winOverlay.classList.add('flex');
+  [660, 830, 990, 1320].forEach((f, i) =>
+    setTimeout(() => beep(f, 'sine', 0.28, 0.13), i * 150)
+  );
+}
+
+function resetGame() {
+  sortedCount = 0;
+  busy = false;
+  chipsLess.innerHTML = '';
+  chipsMore.innerHTML = '';
+  winOverlay.classList.add('hidden');
+  winOverlay.classList.remove('flex');
+  document.querySelectorAll('.hint').forEach(h => h.style.display = '');
+  document.querySelectorAll('.spark').forEach(s => s.remove());
+  buildBubbles();
+}
+
+resetBtn.addEventListener('click', resetGame);
+playAgain.addEventListener('click', resetGame);
+
+buildBubbles();
+</script>
+</body>
+</html>
